@@ -1,49 +1,42 @@
-from flask import Flask, render_template, request
-import joblib
-import re
-import string
-import pandas as pd
 import os
+import sys
+
+import joblib
+from flask import Flask, render_template, request
+
+# Project root (parent of this folder) holds model.pkl and preprocessing.py
+PARENT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+sys.path.insert(0, PARENT_DIR)
+from preprocessing import wordpre  # noqa: E402  (shared with train_model.py)
 
 app = Flask(__name__)
 
-# Correct the path to the model file
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-model_path = os.path.join(parent_dir, "Model.pkl")
-print(f"Corrected model path: {model_path}")
+# File name is case-sensitive on Linux/macOS: it is "model.pkl", not "Model.pkl".
+MODEL_PATH = os.path.join(PARENT_DIR, "model.pkl")
+model = joblib.load(MODEL_PATH)
 
-# Load the model
-Model = joblib.load(model_path)
 
-@app.route('/')
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    if request.method == "GET":
+        return render_template("index.html")
 
-def wordpre(text):
-    text = text.lower()
-    text = re.sub(r'\[.*?\]', '', text)
-    text = re.sub("\\W", " ", text)  # remove special characters
-    text = re.sub(r'https?://\S+|www\.\S+', '', text)
-    text = re.sub('<.*?>+', '', text)
-    text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
-    text = re.sub('\n', '', text)
-    text = re.sub(r'\w*\d\w*', '', text)
-    return text
+    text = request.form.get("txt", "").strip()
+    if not text:
+        return render_template("index.html", error="Please enter some news text first.")
 
-@app.route('/', methods=['POST'])
-def pre():
-    if request.method == 'POST':
-        txt = request.form['txt']
-        txt = wordpre(txt)
-        txt = pd.Series([txt])  # Ensure this is passed as a list or a Series
-        
-        try:
-            result = Model.predict(txt)
-            result = result[0]  # Assuming it's a list/array, get the first prediction
-        except Exception as e:
-            result = f"Error: {str(e)}"
-        
-        return render_template("index.html", result=result)
+    cleaned = wordpre(text)
+    if not cleaned.strip():
+        return render_template("index.html", text=text,
+                               error="The text has no usable words after cleaning. Please enter a real article.")
+    try:
+        result = int(model.predict([cleaned])[0])  # 1 = real, 0 = fake
+    except Exception as exc:  # show the problem instead of mislabelling it as "True News"
+        return render_template("index.html", text=text, error=f"Prediction failed: {exc}")
+
+    return render_template("index.html", text=text, result=result)
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # debug mode exposes an interactive debugger; enable only locally: FLASK_DEBUG=1
+    app.run(debug=os.environ.get("FLASK_DEBUG") == "1")

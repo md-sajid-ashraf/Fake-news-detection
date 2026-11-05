@@ -9,8 +9,8 @@ The Aims of this projects is to use the Natural Language Processing and Machine 
 ## **Prerequisites**
 ---
 ### Things you need to install 
-1. Python 3.9
-     * This setup requires that your machine has python 3.9 installed on it. you can refer to this url https://www.python.org/downloads/ to download python. Once you have python downloaded and installed, you will need to setup PATH variables (if you want to run python program directly, detail instructions are below in how to run software section). To do that check this: https://www.pythoncentral.io/add-python-to-path-python-is-not-recognized-as-an-internal-or-external-command/.
+1. Python 3.10 or newer
+     * This setup requires that your machine has python 3.10+ installed on it (the pinned numpy/scipy versions do not support 3.9). you can refer to this url https://www.python.org/downloads/ to download python. Once you have python downloaded and installed, you will need to setup PATH variables (if you want to run python program directly, detail instructions are below in how to run software section). To do that check this: https://www.pythoncentral.io/add-python-to-path-python-is-not-recognized-as-an-internal-or-external-command/.
 2. You will also need to download and install the required packages after you install python 
      * Sklearn (scikit-learn)
      * numpy
@@ -22,7 +22,7 @@ The Aims of this projects is to use the Natural Language Processing and Machine 
      * flask 
 3. To install the Packages
 ```Language
-pip install -r requirments.txt
+pip install -r requirements.txt
 ```
 4. Or else use can download anaconda and use its anaconda prompt to run the commands. To install anaconda check this url https://www.anaconda.com/download/. most the Packages are preinstalled in the anaconda environment
 
@@ -55,9 +55,9 @@ Here we have build all the classifiers for predicting the fake news detection. T
 
 ![accuracy score](https://github.com/mohammed97ashraf/Fake_news_Detection/blob/main/download%20(4).png)
 
-_The highest accuracy score we are getting is 87.04 but don't worry the model was trained with 61,000+ recored it will perform well_
-Our finally selected and best performing classifier was Logistic Regression which was then saved on disk with name model.plk . Once you clone this repository, this model will be copied to your machine and will be used for prediction. It takes an news article as input from user then shown to user whether it is true or Fake.
-model.plk is used to deploy the model usinf Flask.
+_After fixing the label inversion in Dataset 4 (see below) the Logistic Regression model reaches about 94.4% accuracy on the held-out 20% split (77,000+ records)_
+Our finally selected and best performing classifier was Logistic Regression which was then saved on disk with name model.pkl . Once you clone this repository, this model will be copied to your machine and will be used for prediction. It takes an news article as input from user then shown to user whether it is true or Fake.
+model.pkl is used to deploy the model usinf Flask.
 
 #### Below is the Process Flow of the Model Building:
 ![modelbuildingm](https://github.com/mohammed97ashraf/Fake_news_Detection/blob/main/Modelbulding11.PNG)
@@ -65,7 +65,7 @@ model.plk is used to deploy the model usinf Flask.
 
 ## **ML model Deployment**
 ---
-For Deploying we need to create a sample web interface which will get the text from the user and then send it to the flask server.In the flask server we will use the saved model model.plk to predict the news is real or fake and then return the result to the user through web interface.
+For Deploying we need to create a sample web interface which will get the text from the user and then send it to the flask server.In the flask server we will use the saved model model.pkl to predict the news is real or fake and then return the result to the user through web interface.
  Example 1
 ![result1](https://github.com/mohammed97ashraf/Fake_news_Detection/blob/main/1.PNG)
  Example 2
@@ -74,6 +74,18 @@ For Deploying we need to create a sample web interface which will get the text f
 #### Below is the Process Flow of the Model Deployment:
 ![model deployment](https://github.com/mohammed97ashraf/Fake_news_Detection/blob/main/dep.PNG)
 
+
+## **How to run**
+---
+```
+pip install -r requirements.txt
+python train_model.py            # optional: rebuilds model.pkl from the datasets (~1 minute)
+cd "Model deployment using Flask"
+python app.py                    # open http://127.0.0.1:5000
+```
+Set `FLASK_DEBUG=1` to enable Flask debug mode locally. `model.pkl` must be built with the same scikit-learn version that is installed (pinned in requirements.txt); if you upgrade scikit-learn, re-run `python train_model.py`.
+
+**Label note:** In the Kaggle `train.csv` (Dataset 4) `label = 1` means *unreliable/fake*, so `train_model.py` and the notebook flip it to keep 1 = real, 0 = fake everywhere.
 
 ## **Next steps**
 ---

@@ -1,28 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Fake News Detection</title>
     </head>
     <body>
+        <h2>Fake News Detection</h2>
         <form action="/" method="POST">
-            <textarea name="txt" rows="4" cols="50">
-            </textarea>
-            <input type="submit" name="submit">
+            <textarea name="txt" rows="8" cols="60" placeholder="Paste a news article here...">{{ text or '' }}</textarea>
+            <br/>
+            <input type="submit" value="Check">
         </form>
-        <br/> 
+
+        {% if error %}
+        <p style="color: darkorange;">{{ error }}</p>
+        {% endif %}
+
+        {% if result is defined %}
         <div>
-            <h3>Enterd Text is: </h3>
-            {{ request.form['txt'] }}
+            <h3>Entered text is:</h3>
+            <p>{{ text }}</p>
         </div>
         <div>
-            <h3> The Ml Model Found That is a:</h3>
-        <p>{% if result == 0 %}
+            <h3>The ML model found that it is:</h3>
+            {% if result == 0 %}
             <p style="color: red;">Fake News</p>
-           {% else  %}
-            <p><p style="color:seagreen;">True News</p></p>
-           {% endif  %}
-        </p> 
-        </div>    
+            {% else %}
+            <p style="color: seagreen;">True News</p>
+            {% endif %}
+        </div>
+        {% endif %}
     </body>
-
 </html>
